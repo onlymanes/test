@@ -68,8 +68,8 @@
 </div>
 
 <script>
-/* 后端 API 地址：Worker 上线后填入（或在控制台执行 localStorage.setItem('om_api','https://…')） */
-const API_BASE = localStorage.getItem('om_api') || '';
+/* 后端 API 地址：Worker 已上线；也可在控制台用 localStorage.setItem('om_api','https://…') 覆盖 */
+const API_BASE = localStorage.getItem('om_api') || 'https://onlymanes-api.onlymanes.workers.dev';
 let user = 'helen';
 const log = document.getElementById('log');
 const input = document.getElementById('input');
@@ -125,6 +125,25 @@ input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
 addMsg('onlymanes', '你好，我是 onlymanes。V1 内测中，后端连接后即可对话。', 'ai');
 statusEl.textContent = API_BASE ? '已连接' : '后端连接中…';
+
+/* 访问统计 beacon：记录独立访客，bot 判定在服务端做（启发式） */
+(function () {
+  try {
+    fetch(API_BASE + '/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: location.pathname,
+        ref: document.referrer,
+        lang: navigator.language,
+        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        vw: window.innerWidth, vh: window.innerHeight,
+        touch: 'ontouchstart' in window,
+        webdriver: !!navigator.webdriver,
+      }),
+    }).catch(function () {});
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>
