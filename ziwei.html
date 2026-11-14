@@ -463,7 +463,7 @@ function buildUserChart(form) {
     if (!conv) throw new Error('农历日期无效，请重新选择。');
     solar = conv;
     const leap = leapMonthOf(ly);
-    if (leap === lm) leapNote = '这一年有闰' + LUNAR_MONTH_NAMES[leap - 1] + '月，本次按平月排盘';
+    if (leap === lm) leapNote = '这一年有闰' + LUNAR_MONTH_NAMES[leap - 1] + '，本次按平月排盘';
   } else {
     const parts = form.birthDate.split('-');
     solar = { year: +parts[0], month: +parts[1], day: +parts[2] };
