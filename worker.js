@@ -175,6 +175,7 @@ async function handleChat(req) {
 /* ---- 紫微星娱乐测试（2026-11-14 V1）----
  * POST /api/ziwei  公开接口（不登录），每人每天限 1 次（IP 哈希 + 日期，记 KV）。
  * 机制：两颗候选紫微星，服务端 50% 随机定其一；星的命盘为引擎预生成脱敏常量。
+ * 星的具体出生数据在 Worker 密钥 ZIWEI_STARS_JSON 中，不在仓库文件里。
  * 不透露：接口响应与页面均不得含星的时间、日期、真太阳时、时辰、地点字段；
  * 提交时刻（精确到秒，取用户本地时钟）+ 梅花易数起卦；命盘由前端 Renhuai123/ziwei-doushu 引擎排好随请求带来。
  * 故事由 Gemini 2.5 Flash 写（2.0 Flash 作备用）：只讲故事，不预测、不给人生建议；输出后做断言词复查。
@@ -182,11 +183,20 @@ async function handleChat(req) {
  */
 const ZIWEI_MODEL = 'gemini-2.5-flash';
 const ZIWEI_MODEL_FALLBACK = 'gemini-2.0-flash';
-const ZIWEI_STARS = []; // 出生数据已移至 Worker 密钥 ZIWEI_STARS_JSON，不在仓库中
+/* 两颗候选紫微星的具体出生数据存在 Worker 密钥 ZIWEI_STARS_JSON 里（JSON 数组），
+   不在仓库文件里。缺失或损坏时接口直接 500，不回退、不泄露。 */
+function getZiweiStars() {
+  try {
+    const raw = (typeof ZIWEI_STARS_JSON !== 'undefined') ? ZIWEI_STARS_JSON : '';
+    const arr = JSON.parse(raw || 'null');
+    if (Array.isArray(arr) && arr.length === 2) return arr;
+  } catch (e) { /* fall through */ }
+  return null;
+}
 /* 两颗候选紫微星的命盘（Renhuai123/ziwei-doushu 引擎预生成，已脱敏：
-   不含任何日期/时间/地点信息，label 统为“紫微星”。原始时间只存在于上方
-   ZIWEI_STARS 常量（后端机制），永不随接口返回、永不在页面展示。 */
-const ZIWEI_STAR_CHARTS = {"a": {"label": "紫微星", "soul": "禄存", "body": "火星", "fiveElements": "木三局", "lifePalace": {"name": "命宫", "stem": "庚", "branch": "寅", "major": [], "minor": [], "adjective": ["封诰", "旬空", "蜚廉", "阴煞"]}, "ziweiPalace": "兄弟", "spousePalace": {"name": "夫妻", "stem": "庚", "branch": "子", "major": ["天机(庙)化权"], "minor": ["天厨"], "adjective": ["天福", "天哭", "天虚"]}, "careerPalace": {"name": "官禄", "stem": "甲", "branch": "午", "major": ["巨门(旺)"], "minor": [], "adjective": ["擎羊", "台辅"]}, "palaces": ["命宫:空宫", "父母:天府", "福德:太阴", "田宅:廉贞、贪狼", "官禄:巨门", "仆役:天相", "迁移:天同、天梁", "疾厄:武曲、七杀", "财帛:太阳", "子女:空宫", "夫妻:天机", "兄弟:紫微、破军"]}, "b": {"label": "紫微星", "soul": "巨门", "body": "火星", "fiveElements": "土五局", "lifePalace": {"name": "命宫", "stem": "辛", "branch": "丑", "major": [], "minor": ["天姚", "龙德"], "adjective": ["大耗"]}, "ziweiPalace": "夫妻", "spousePalace": {"name": "夫妻", "stem": "己", "branch": "亥", "major": ["紫微(旺)", "七杀(平)"], "minor": ["劫煞"], "adjective": ["天魁", "月德"]}, "careerPalace": {"name": "官禄", "stem": "癸", "branch": "巳", "major": ["天府(得)"], "minor": ["破碎"], "adjective": ["文曲", "禄存", "三台", "天贵", "天巫", "天官", "副截"]}, "palaces": ["父母:空宫", "福德:廉贞、破军", "田宅:空宫", "官禄:天府", "仆役:天同、太阴", "迁移:武曲、贪狼", "疾厄:太阳、巨门", "财帛:天相", "子女:天机、天梁", "夫妻:紫微、七杀", "兄弟:空宫", "命宫:空宫"]}};
+   不含任何日期/时间/地点信息，label 统为“紫微星”；按掷选序号取用。
+   星的具体出生数据在 Worker 密钥 ZIWEI_STARS_JSON 中，不在仓库文件里。 */
+const ZIWEI_STAR_CHARTS = [{"label": "紫微星", "soul": "禄存", "body": "火星", "fiveElements": "木三局", "lifePalace": {"name": "命宫", "stem": "庚", "branch": "寅", "major": [], "minor": [], "adjective": ["封诰", "旬空", "蜚廉", "阴煞"]}, "ziweiPalace": "兄弟", "spousePalace": {"name": "夫妻", "stem": "庚", "branch": "子", "major": ["天机(庙)化权"], "minor": ["天厨"], "adjective": ["天福", "天哭", "天虚"]}, "careerPalace": {"name": "官禄", "stem": "甲", "branch": "午", "major": ["巨门(旺)"], "minor": [], "adjective": ["擎羊", "台辅"]}, "palaces": ["命宫:空宫", "父母:天府", "福德:太阴", "田宅:廉贞、贪狼", "官禄:巨门", "仆役:天相", "迁移:天同、天梁", "疾厄:武曲、七杀", "财帛:太阳", "子女:空宫", "夫妻:天机", "兄弟:紫微、破军"]}, {"label": "紫微星", "soul": "巨门", "body": "火星", "fiveElements": "土五局", "lifePalace": {"name": "命宫", "stem": "辛", "branch": "丑", "major": [], "minor": ["天姚", "龙德"], "adjective": ["大耗"]}, "ziweiPalace": "夫妻", "spousePalace": {"name": "夫妻", "stem": "己", "branch": "亥", "major": ["紫微(旺)", "七杀(平)"], "minor": ["劫煞"], "adjective": ["天魁", "月德"]}, "careerPalace": {"name": "官禄", "stem": "癸", "branch": "巳", "major": ["天府(得)"], "minor": ["破碎"], "adjective": ["文曲", "禄存", "三台", "天贵", "天巫", "天官", "副截"]}, "palaces": ["父母:空宫", "福德:廉贞、破军", "田宅:空宫", "官禄:天府", "仆役:天同、太阴", "迁移:武曲、贪狼", "疾厄:太阳、巨门", "财帛:天相", "子女:天机、天梁", "夫妻:紫微、七杀", "兄弟:空宫", "命宫:空宫"]}];
 const ZIWEI_MODES = {
   future: '自己的未来与紫微星的缘分 + 自己的运势',
   child: '一位已出生、有名字的子女的紫微缘和运势',
@@ -291,6 +301,10 @@ async function handleZiwei(req) {
   if (typeof GEMINI_API_KEY === 'undefined' || !GEMINI_API_KEY) {
     return json({ error: 'model_not_configured' }, 503, req);
   }
+  const stars = getZiweiStars();
+  if (!stars || stars.length !== 2) {
+    return json({ error: 'stars_not_configured', message: '服务暂时不可用，请稍后再试。' }, 500, req);
+  }
   const ip = req.headers.get('CF-Connecting-IP') || 'unknown';
   const day = new Date().toISOString().slice(0, 10);
   const key = 'ziwei:day:' + day + ':' + await hashIP(ip);
@@ -300,10 +314,9 @@ async function handleZiwei(req) {
   await MEMORY.put(key, '1', { expirationTtl: 48 * 3600 });
 
   const mh = meihua(t);
-  const pick = crypto.getRandomValues(new Uint8Array(1))[0] % 2;
-  const star = ZIWEI_STARS[pick];
+  const pick = crypto.getRandomValues(new Uint8Array(1))[0] % stars.length;
   const userChart = body.userChart || null;
-  const starChart = ZIWEI_STAR_CHARTS[star.id] || null;
+  const starChart = ZIWEI_STAR_CHARTS[pick] || null;
   const sentence = String(body.sentence || '').slice(0, 100);
   const imagination = String(body.imagination || '').slice(0, 200);
   const birthplace = String(body.birthplace || '').slice(0, 100);
