@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你与紫微星的前世、今缘、与来生 · onlymanes.ai</title>
+<link rel="icon" href="avatar.png">
+<style>
+  :root {
+    --ink:#f2eefc; --muted:#b9b0d8; --faint:#8d84ad;
+    --card:rgba(20,14,48,.78); --card-line:rgba(180,160,255,.28);
+    --gold:#e8c96a; --pink:#f6a8c0; --accent:#9d7bff;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    color:var(--ink); min-height:100vh;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#0b0722;
+    background-image:linear-gradient(180deg,#0b0722 0%,#1a0f3d 45%,#241243 70%,#12081f 100%);
+  }
+  .bg {
+    position:fixed; inset:0; z-index:0;
+    background:url('ziwei-star.webp') center 18% / cover no-repeat;
+    opacity:.92;
+  }
+  .bg::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(11,7,34,.55) 0%, rgba(11,7,34,.25) 30%, rgba(11,7,34,.62) 62%, rgba(11,7,34,.94) 100%);
+  }
+  #sparks { position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .spark { position:absolute; border-radius:50%; background:#fff;
+    animation:twinkle var(--d,3s) ease-in-out infinite; opacity:.2; }
+  @keyframes twinkle { 0%,100% { opacity:.12; transform:scale(.7);} 50% { opacity:.95; transform:scale(1.15);} }
+  .petal { position:fixed; top:-40px; z-index:1; pointer-events:none; color:var(--pink);
+    animation:fall linear infinite; opacity:.75; }
+  @keyframes fall {
+    0% { transform:translateY(-40px) rotate(0deg); opacity:0; }
+    8% { opacity:.8; }
+    100% { transform:translateY(105vh) rotate(320deg); opacity:.15; }
+  }
+  .wrap { position:relative; z-index:2; max-width:760px; margin:0 auto; padding:28px 16px 80px; }
+  header { text-align:center; margin:18px 0 8px; }
+  header h1 { font-size:27px; line-height:1.35; margin:0 0 6px; letter-spacing:2px;
+    text-shadow:0 2px 18px rgba(0,0,0,.7); }
+  header .en { color:var(--gold); font-size:14px; letter-spacing:.4px; }
+  header .tag { color:var(--muted); font-size:13px; margin-top:8px; font-style:italic; }
+  .disclaimer {
+    margin:20px auto 6px; padding:14px 16px; border:1.5px solid var(--gold);
+    border-radius:12px; background:rgba(20,12,40,.82);
+    font-size:14.5px; line-height:1.75; text-align:center;
+  }
+  .disclaimer b { color:var(--gold); }
+  .disclaimer .en { font-size:13px; color:var(--muted); margin-top:6px; }
+  .card {
+    background:var(--card); border:1px solid var(--card-line); border-radius:16px;
+    padding:20px; margin:18px 0; backdrop-filter:blur(6px);
+  }
+  .card h2 { font-size:18px; margin:0 0 4px; color:var(--gold); letter-spacing:1px; }
+  .card h3 { font-size:15.5px; margin:18px 0 6px; color:#d9cfff; }
+  .card p, .card li { font-size:14.5px; line-height:1.8; }
+  .card p.note { color:var(--muted); font-size:13px; }
+  .modes { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 4px; }
+  .mode { border:1px solid var(--card-line); border-radius:12px; padding:12px; cursor:pointer;
+    font-size:14px; line-height:1.6; background:rgba(255,255,255,.03); }
+  .mode:hover { border-color:var(--accent); }
+  .mode input { accent-color:var(--accent); margin-right:6px; }
+  .mode.sel { border-color:var(--gold); background:rgba(232,201,106,.08); }
+  label.f { display:block; font-size:14px; margin:16px 0 6px; color:#d9cfff; }
+  label.f small { color:var(--muted); font-weight:normal; }
+  input[type=date], input[type=time], input[type=text], select {
+    width:100%; padding:11px 12px; font-size:15px; color:var(--ink);
+    background:rgba(255,255,255,.07); border:1px solid var(--card-line); border-radius:10px;
+  }
+  input[type=date]::-webkit-calendar-picker-indicator { filter:invert(.8); }
+  .seg { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .seg label { font-size:14px; color:var(--ink); }
+  .seg input { accent-color:var(--accent); }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:560px){ .modes,.row2{ grid-template-columns:1fr; } header h1{ font-size:22px; } }
+  #submitBtn {
+    width:100%; margin-top:22px; padding:15px; font-size:17px; letter-spacing:4px;
+    border:none; border-radius:12px; cursor:pointer; color:#241243;
+    background:linear-gradient(135deg,#e8c96a,#c9a24a);
+  }
+  #submitBtn:disabled { opacity:.55; cursor:wait; }
+  .status { min-height:20px; font-size:13.5px; color:var(--muted); text-align:center; margin-top:10px; }
+  .chapter { margin:16px 0; }
+  .chapter h3 { color:var(--gold); }
+  .chapter p { white-space:pre-wrap; }
+  .kv { font-size:14px; line-height:1.9; }
+  .kv b { color:var(--gold); font-weight:600; }
+  .audit li { margin:4px 0; }
+  .audit li b { color:var(--gold); }
+  .langtoggle { text-align:right; margin:6px 0 0; }
+  .langtoggle button {
+    background:none; border:1px solid var(--card-line); color:var(--ink);
+    border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer; margin-left:6px;
+  }
+  .langtoggle button.on { border-color:var(--gold); color:var(--gold); }
+  .flower-big { font-size:52px; text-align:center; margin:8px 0 2px; }
+  .btn {
+    display:inline-block; padding:12px 20px; font-size:15px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--gold); background:rgba(232,201,106,.12); color:var(--gold);
+    text-decoration:none; margin:6px 8px 6px 0;
+  }
+  .btn.ghost { border-color:var(--card-line); background:none; color:var(--ink); }
+  .btn:hover { filter:brightness(1.15); }
+  .music-links a {
+    display:inline-block; margin:6px 8px 6px 0; padding:9px 14px; font-size:14px;
+    border:1px solid var(--card-line); border-radius:20px; color:var(--ink); text-decoration:none;
+  }
+  .music-links a:hover { border-color:var(--gold); color:var(--gold); }
+  blockquote {
+    margin:14px 0 0; padding:12px 16px; border-left:3px solid var(--pink);
+    background:rgba(246,168,192,.06); font-size:14px; line-height:1.9; color:#e8ddf5;
+  }
+  blockquote small { color:var(--muted); }
+  footer { text-align:center; color:var(--faint); font-size:12.5px; margin-top:30px; line-height:1.9; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div id="sparks"></div>
+<div class="wrap">
+
+  <header>
+    <h1>你与紫微星的前世、今缘、与来生</h1>
+    <div class="en">Who am I? Who am I from? Where am I to go?<br>The Matrix is here NOW!</div>
+    <div class="tag">Just want to know the only answer.</div>
+  </header>
+
+  <div class="disclaimer">
+    <b>这是一场游戏。</b>紫微斗数是一套流传几百年的象征语言，我们用它来讲故事，<b>不预测命运、不作人生决定</b>。
+    <div class="en">This is a game. Zi Wei Dou Shu is a centuries-old symbolic language. We use it to tell stories — not to predict fate, and not to make life decisions.</div>
+  </div>
+
+  <!-- ============ 表单 ============ -->
+  <div class="card" id="formCard">
+    <h2>开始之前，先认识一下你</h2>
+    <p class="note">出生信息只用于生成这一次的故事，不保存。每天限测 1 次。</p>
+
+    <label class="f">你想讲哪一个故事？（必选）</label>
+    <div class="modes" id="modes">
+      <label class="mode"><input type="radio" name="mode" value="future" checked>自己的未来<br><small>与紫微星的缘分 + 自己的运势</small></label>
+      <label class="mode"><input type="radio" name="mode" value="child">一位子女<br><small>已出生、有名字的子女的紫微缘和运势</small></label>
+      <label class="mode"><input type="radio" name="mode" value="marriage">姻缘<br><small>自己与紫微星的姻缘</small></label>
+      <label class="mode"><input type="radio" name="mode" value="futureChild">未来的孩子<br><small>暂无子女：之后若有子女，其与紫微星的缘分</small></label>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label class="f" for="birthDate">出生年月日（必填）</label>
+        <input type="date" id="birthDate" required>
+      </div>
+      <div>
+        <label class="f">历法</label>
+        <div class="seg" style="padding-top:10px;">
+          <label><input type="radio" name="calendar" value="solar" checked> 阳历</label>
+          <label><input type="radio" name="calendar" value="lunar"> 农历</label>
+          <label id="leapWrap" class="hidden"><input type="checkbox" id="isLeap"> 闰月</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label class="f" for="birthTime">出生时间 <small>（选填，精确到分钟，24 小时制，如 17:30）</small></label>
+        <input type="time" id="birthTime" placeholder="17:30">
+        <p class="note" style="margin:6px 0 0;">不知道可以不填；不填暂按午时排盘，填了会更贴合。</p>
+      </div>
+      <div>
+        <label class="f" for="gender">性别 <small>（选填，只用于排盘方向）</small></label>
+        <select id="gender">
+          <option value="">不填</option>
+          <option value="女">女</option>
+          <option value="男">男</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="f" for="birthplace">出生地 <small>（选填）</small></label>
+    <input type="text" id="birthplace" placeholder="比如：北京、里贾纳……" maxlength="100">
+
+    <div id="childWrap" class="hidden">
+      <label class="f" for="childName">子女的名字（必填，因为你选了“一位子女”）</label>
+      <input type="text" id="childName" placeholder="孩子的名字" maxlength="50">
+    </div>
+
+    <label class="f" for="imagination">想象一下，如果你的前世在人间，你会在哪个地方出生？ <small>（选填）</small></label>
+    <input type="text" id="imagination" placeholder="写一个地方，或者留白" maxlength="200">
+
+    <label class="f" for="sentence">用一句话，写下你此刻的想法 <small>（选填，100 字以内；会原样放进故事里）</small></label>
+    <input type="text" id="sentence" placeholder="随便写一句……" maxlength="100">
+
+    <button id="submitBtn">开始测算</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- ============ 结果 ============ -->
+  <div id="result" class="hidden">
+    <div class="card">
+      <h2 id="storyTitle">你的故事</h2>
+      <div class="langtoggle">
+        <button id="btnZh" class="on">中文</button><button id="btnEn">English</button>
+      </div>
+      <div id="storyZh">
+        <div class="chapter"><h3>我是谁</h3><p id="zhWho"></p></div>
+        <div class="chapter"><h3>我从哪来</h3><p id="zhFrom"></p></div>
+        <div class="chapter"><h3>我要去哪</h3><p id="zhTo"></p></div>
+      </div>
+      <div id="storyEn" class="hidden">
+        <div class="chapter"><h3>Who am I?</h3><p id="enWho"></p></div>
+        <div class="chapter"><h3>Who am I from?</h3><p id="enFrom"></p></div>
+        <div class="chapter"><h3>Where am I to go?</h3><p id="enTo"></p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>今晚的星</h2>
+      <p class="kv" id="starInfo"></p>
+      <h3>梅花易数 · 这一秒的卦</h3>
+      <p class="kv" id="meihuaInfo"></p>
+    </div>
+
+    <div class="card">
+      <h2>这个故事是怎么来的</h2>
+      <ul class="audit" id="auditList" style="padding-left:20px; font-size:14px; line-height:1.8;"></ul>
+      <p class="note">随机不是命运的证据——它是“这不是命运”的证据：掷到的星、抽到的卦，都是可以复核的数，不是天意。</p>
+    </div>
+
+    <div class="card" id="flowerCard">
+      <h2>化缘 · 一朵小花</h2>
+      <p>如果你满意，请给这个答案送一朵小花。这个测试也当“化缘”啦——一朵花 1 元（当地货币 1 元），不设上限，多少随你。</p>
+      <div id="flowerBefore">
+        <a class="btn" id="paypalBtn" href="#" target="_blank" rel="noopener">❀ 送一朵小花（PayPal · 1 加元）</a>
+        <button class="btn ghost" id="etransferBtn">e-transfer 也可以</button>
+        <p class="note" id="etransferNote" style="display:none;">用 e-transfer 汇 1 加元到 <b>onlymanes@hotmail.com</b>，备注「紫微星小花」，然后点下面的“我已送花”。</p>
+        <p><button class="btn ghost" id="giftDoneBtn">我已送花</button></p>
+      </div>
+      <div id="flowerAfter" class="hidden">
+        <div class="flower-big">❀</div>
+        <p style="text-align:center;">谢谢你的花。它已经开在这里了。<br><small style="color:var(--muted);">V1 只记录你的自愿确认，未接支付回调核对到账；自动核销是 V2 的事。</small></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 人文 / 音乐 ============ -->
+  <div class="card">
+    <h2>人文 · 一首歌的时间</h2>
+    <p>毛不易《如果有一天我变得很有钱》——点下面去有版权的平台听（本站不托管音频）：</p>
+    <div class="music-links">
+      <a href="https://y.qq.com/n/ryqq/search?w=%E6%AF%9B%E4%B8%8D%E6%98%93%20%E5%A6%82%E6%9E%9C%E6%9C%89%E4%B8%80%E5%A4%A9%E6%88%91%E5%8F%98%E5%BE%97%E5%BE%88%E6%9C%89%E9%92%B1" target="_blank" rel="noopener">QQ音乐</a>
+      <a href="https://music.163.com/#/search/m/?s=%E6%AF%9B%E4%B8%8D%E6%98%93%20%E5%A6%82%E6%9E%9C%E6%9C%89%E4%B8%80%E5%A4%A9%E6%88%91%E5%8F%98%E5%BE%97%E5%BE%88%E6%9C%89%E9%92%B1&type=1" target="_blank" rel="noopener">网易云音乐</a>
+      <a href="https://open.spotify.com/search/%E6%AF%9B%E4%B8%8D%E6%98%93%20%E5%A6%82%E6%9E%9C%E6%9C%89%E4%B8%80%E5%A4%A9%E6%88%91%E5%8F%98%E5%BE%97%E5%BE%88%E6%9C%89%E9%92%B1" target="_blank" rel="noopener">Spotify</a>
+      <a href="https://www.youtube.com/results?search_query=%E6%AF%9B%E4%B8%8D%E6%98%93+%E5%A6%82%E6%9E%9C%E6%9C%89%E4%B8%80%E5%A4%A9%E6%88%91%E5%8F%98%E5%BE%97%E5%BE%88%E6%9C%89%E9%92%B1" target="_blank" rel="noopener">YouTube</a>
+    </div>
+    <blockquote>
+      现在是里贾纳时间17:46分，2026年2月24日周二。<br>
+      忽然有兴致写这么一个关于“紫微星”的娱乐测试，测测你与传说中的“紫微星”的前世、今缘、与来生。<br>
+      从小对神秘事物感兴趣的我，免不了对“紫微斗数”的着迷。<br>
+      于是写这个娱乐测试，也当“化缘”啦:)<br>
+      我很欣赏音乐人毛不易的很多歌，让我想起了这首《如果有一天我变得很有钱》，希望那些邪恶的人不再拥有话语权，希望看得到那些难得一见的笑脸。<br>
+      诚心祝福天下好人一生平安、健康、幸福、快乐每一天。心有所想，事有所成。<br>
+      这是一个前所未有的时代，让我们尽情享受这一切的美好，人与人和谐相处，没有疾病，没有战争，没有灾祸，不愁衣食，沉浸在这个真实的Matrix世界里，体验像鸟儿一样自由地飞翔~<br>
+      你，准备好了么……<br>
+      <small>—— Helen，2026-02-24，写下这个测试的第一版想法</small>
+    </blockquote>
+  </div>
+
+  <footer>
+    © onlymanes.ai · 本页为娱乐测试，不作命运判断<br>
+    紫微星画像由 AI 生成；排盘用 iztro 开源库；故事由 AI 讲述
+  </footer>
+</div>
+
+<script src="iztro.min.js"></script>
+<script>
+/* 紫微星娱乐测试 V1 */
+const API_BASE = localStorage.getItem('om_api') || 'https://onlymanes-api.onlymanes.workers.dev';
+const $ = id => document.getElementById(id);
+const statusEl = $('status'), submitBtn = $('submitBtn');
+
+/* ---------- 星空与花瓣 ---------- */
+(function sparks() {
+  const box = $('sparks');
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    const sz = 1 + Math.random() * 2.5;
+    s.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 100).toFixed(1) +
+      '%;width:' + sz + 'px;height:' + sz + 'px;--d:' + (2 + Math.random() * 3).toFixed(1) + 's;';
+    box.appendChild(s);
+  }
+  const petals = ['❀', '✿', '🌸'];
+  for (let i = 0; i < 7; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = petals[i % 3];
+    p.style.cssText = 'left:' + (Math.random() * 96).toFixed(1) + '%;font-size:' + (13 + Math.random() * 10).toFixed(0) +
+      'px;animation-duration:' + (14 + Math.random() * 16).toFixed(0) + 's;animation-delay:' + (Math.random() * 18).toFixed(0) + 's;';
+    document.body.appendChild(p);
+  }
+})();
+
+/* ---------- 表单联动 ---------- */
+document.querySelectorAll('input[name=calendar]').forEach(r => r.addEventListener('change', () => {
+  $('leapWrap').classList.toggle('hidden', document.querySelector('input[name=calendar]:checked').value !== 'lunar');
+}));
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => {
+  document.querySelectorAll('#modes .mode').forEach(m => m.classList.remove('sel'));
+  r.closest('.mode').classList.add('sel');
+  $('childWrap').classList.toggle('hidden', r.value !== 'child');
+}));
+document.querySelector('#modes .mode').classList.add('sel');
+if (localStorage.getItem('ziwei_last_day') === new Date().toISOString().slice(0, 10)) {
+  statusEl.textContent = '你今天已经测过一次啦，明天再来。';
+  submitBtn.disabled = true;
+}
+
+/* ---------- 排盘（iztro 2.6.1，本地 bundle） ---------- */
+function timeIndexFrom(hhmm) {
+  if (!hhmm) return { idx: 6, known: false };
+  const parts = hhmm.split(':');
+  const mins = (+parts[0]) * 60 + (+parts[1] || 0);
+  if (mins >= 23 * 60) return { idx: 12, known: true };
+  if (mins < 60) return { idx: 0, known: true };
+  return { idx: Math.floor((mins - 60) / 120) + 1, known: true };
+}
+function palaceSummary(a, name) {
+  const j = a.palace(name).toJSON();
+  const fmt = s => s.name + (s.brightness ? '(' + s.brightness + ')' : '') + (s.mutagen ? '化' + s.mutagen : '');
+  return {
+    name: j.name, stem: j.heavenlyStem, branch: j.earthlyBranch,
+    major: j.majorStars.map(fmt), minor: j.minorStars.map(s => s.name),
+    adjective: j.adjectiveStars.map(s => s.name),
+  };
+}
+function chartSummary(a, label) {
+  return {
+    label: label,
+    solar: a.solarDate, lunar: a.lunarDate, chinese: a.chineseDate,
+    zodiac: a.zodiac, sign: a.sign, soul: a.soul, body: a.body,
+    fiveElements: a.fiveElementsClass,
+    lifePalace: palaceSummary(a, '命宫'),
+    ziweiPalace: (a.star('紫微') ? a.star('紫微').palace().name : ''),
+    spousePalace: palaceSummary(a, '夫妻'),
+    careerPalace: palaceSummary(a, '官禄'),
+    palaces: a.palaces.map(p => {
+      const j = p.toJSON();
+      return j.name + ':' + (j.majorStars.map(s => s.name).join('、') || '空宫');
+    }),
+  };
+}
+function buildCharts(form) {
+  if (typeof iztro === 'undefined') return { userChart: null, starCharts: null, note: 'iztro 未加载' };
+  const ti = timeIndexFrom(form.birthTime);
+  const gender = form.gender || '女';
+  let user;
+  if (form.calendar === 'lunar') {
+    user = iztro.astro.byLunar(form.birthDate, ti.idx, gender, form.isLeap, true, 'zh-CN');
+  } else {
+    user = iztro.astro.bySolar(form.birthDate, ti.idx, gender, true, 'zh-CN');
+  }
+  const userChart = chartSummary(user, '你');
+  /* 两颗候选紫微星，服务端 50% 掷选。 */
+  const starA = iztro.astro.bySolar('[已移除]', 0, '女', true, 'zh-CN');
+  const starB = iztro.astro.bySolar('[已移除]', 1, '女', true, 'zh-CN');
+  return {
+    userChart: userChart,
+    starCharts: { starA: chartSummary(starA, '紫微星'), starB: chartSummary(starB, '紫微星') },
+    timeKnown: ti.known,
+    genderNote: form.gender ? '' : '未选性别，暂按女命排盘',
+  };
+}
+
+/* ---------- 提交 ---------- */
+submitBtn.onclick = async () => {
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  const birthDate = $('birthDate').value;
+  if (!birthDate) { statusEl.textContent = '请先填出生年月日。'; return; }
+  const childName = $('childName').value.trim();
+  if (mode === 'child' && !childName) { statusEl.textContent = '选了“一位子女”，请填孩子的名字。'; return; }
+  const now = new Date();
+  const form = {
+    calendar: document.querySelector('input[name=calendar]:checked').value,
+    isLeap: $('isLeap').checked,
+    birthDate: birthDate,
+    birthTime: $('birthTime').value || '',
+    gender: $('gender').value || '',
+    birthplace: $('birthplace').value.trim(),
+    imagination: $('imagination').value.trim(),
+    sentence: $('sentence').value.trim(),
+    childName: childName,
+  };
+  submitBtn.disabled = true;
+  statusEl.textContent = '正在排盘、起卦、讲故事……（约十几秒）';
+  let charts;
+  try { charts = buildCharts(form); }
+  catch (e) { charts = { userChart: null, starCharts: null, timeKnown: false, genderNote: '排盘出错：' + e.message }; }
+  const payload = {
+    mode: mode,
+    submitTime: { y: now.getFullYear(), mo: now.getMonth() + 1, d: now.getDate(), h: now.getHours(), mi: now.getMinutes(), s: now.getSeconds() },
+    userChart: charts.userChart,
+    starCharts: charts.starCharts,
+    timeKnown: charts.timeKnown,
+    genderNote: charts.genderNote || '',
+    sentence: form.sentence,
+    imagination: form.imagination,
+    birthplace: form.birthplace,
+    childName: form.childName,
+  };
+  try {
+    const r = await fetch(API_BASE + '/api/ziwei', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      statusEl.textContent = j.message || ('出错了（' + r.status + '），请稍后再试。');
+      if (r.status !== 429) submitBtn.disabled = false;
+      return;
+    }
+    localStorage.setItem('ziwei_last_day', new Date().toISOString().slice(0, 10));
+    renderResult(j, form);
+    statusEl.textContent = '';
+  } catch (e) {
+    statusEl.textContent = '连接失败：' + e.message + '，请检查网络后重试。';
+    submitBtn.disabled = false;
+  }
+};
+
+/* ---------- 渲染结果 ---------- */
+function esc(s) { return String(s == null ? '' : s); }
+function renderResult(j, form) {
+  $('formCard').classList.add('hidden');
+  $('result').classList.remove('hidden');
+  $('storyTitle').textContent = j.story.title_zh || '你的故事';
+  $('zhWho').textContent = j.story.story_zh.who || '';
+  $('zhFrom').textContent = j.story.story_zh.from || '';
+  $('zhTo').textContent = j.story.story_zh.to || '';
+  $('enWho').textContent = j.story.story_en.who || '';
+  $('enFrom').textContent = j.story.story_en.from || '';
+  $('enTo').textContent = j.story.story_en.to || '';
+
+  const st = j.star, ot = j.otherStar;
+  $('starInfo').innerHTML =
+    '今晚掷到的是<b>' + esc(st.place) + '的那颗</b>紫微星：出生 ' + esc(st.clock) + ' ' + esc(st.tzLabel) +
+    '；按真太阳时约 ' + esc(st.trueSolar) + '（' + esc(st.hourBranch) + '）。<br>' +
+    '另一颗候选是' + esc(ot.place) + '的那颗：出生 ' + esc(ot.clock) + ' ' + esc(ot.tzLabel) +
+    '；按真太阳时约 ' + esc(ot.trueSolar) + '（' + esc(ot.hourBranch) + '）。<br>' +
+    '两颗星同日而生，只差一地之隔——掷一次，看你遇见的是哪一颗。';
+  const mh = j.meihua;
+  $('meihuaInfo').innerHTML =
+    '你点下“开始测算”的那一秒：<b>' + mh.submit.y + '-' + mh.submit.mo + '-' + mh.submit.d + ' ' +
+    mh.submit.h + ':' + String(mh.submit.mi).padStart(2, '0') + ':' + String(mh.submit.s).padStart(2, '0') + '</b><br>' +
+    '上卦：' + esc(mh.arithmetic.upper) + '<br>' +
+    '下卦与动爻：' + esc(mh.arithmetic.lower) + '<br>' +
+    '本卦第 <b>' + mh.hexagram.num + ' 卦 · ' + esc(mh.hexagram.name) + '</b>（' + esc(mh.upper.name) + mh.upper.symbol + '上' + esc(mh.lower.name) + mh.lower.symbol + '下），' +
+    '动爻第 ' + mh.movingLine + ' 爻，变卦第 <b>' + mh.changedHexagram.num + ' 卦 · ' + esc(mh.changedHexagram.name) + '</b>。<br>' +
+    '<small style="color:var(--muted);">' + esc(mh.arithmetic.note) + '</small>';
+
+  const a = j.audit;
+  const items = [
+    '<b>命盘</b>：' + esc(a.chart) + '。' + (a.chartUsed ? '你的命盘与紫微星的命盘都已排好，随请求发给模型作故事素材。' : '本次排盘库未加载，只用了梅花易数与出生信息讲故事。'),
+    '<b>随机</b>：' + esc(a.random) + '。两颗星的真太阳时已在上方列出，可复核。',
+    '<b>你写的</b>：' + esc(a.userWords) + (form.sentence ? '——你那句“' + esc(form.sentence) + '”原样在故事里。' : '——你这次没写一句话，故事里就没有引用。'),
+    '<b>时间</b>：' + (a.timeKnown ? '你填了出生时间，按该时辰排盘。' : '你没填出生时间，暂按午时排盘；填了会更贴合。') + (a.genderNote ? esc(a.genderNote) + '。' : ''),
+    '<b>隐私</b>：' + esc(a.privacy) + '。',
+  ];
+  $('auditList').innerHTML = items.map(i => '<li>' + i + '</li>').join('');
+
+  setupFlower();
+  $('result').scrollIntoView({ behavior: 'smooth' });
+}
+
+$('btnZh').onclick = () => {
+  $('storyZh').classList.remove('hidden'); $('storyEn').classList.add('hidden');
+  $('btnZh').classList.add('on'); $('btnEn').classList.remove('on');
+};
+$('btnEn').onclick = () => {
+  $('storyEn').classList.remove('hidden'); $('storyZh').classList.add('hidden');
+  $('btnEn').classList.add('on'); $('btnZh').classList.remove('on');
+};
+
+/* ---------- 送花（V1：PayPal 链接 + 自愿确认） ---------- */
+function setupFlower() {
+  const token = (crypto.randomUUID ? crypto.randomUUID() : ('gift-' + Date.now()));
+  const returnUrl = location.origin + location.pathname + '?flower=returned&gift=' + encodeURIComponent(token);
+  const pp = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick'
+    + '&business=' + encodeURIComponent('onlymanes@paypal.com')
+    + '&item_name=' + encodeURIComponent('紫微星故事 · 一朵小花')
+    + '&amount=1&currency_code=CAD'
+    + '&return=' + encodeURIComponent(returnUrl)
+    + '&custom=' + encodeURIComponent(token);
+  $('paypalBtn').href = pp;
+  $('paypalBtn').onclick = () => { localStorage.setItem('ziwei_gift_token', token); };
+  $('etransferBtn').onclick = () => {
+    const n = $('etransferNote');
+    n.style.display = n.style.display === 'none' ? 'block' : 'none';
+  };
+  $('giftDoneBtn').onclick = () => recordGift(token, 'manual');
+}
+async function recordGift(token, method) {
+  try {
+    await fetch(API_BASE + '/api/ziwei-gift', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, method: method }),
+    });
+  } catch (e) { /* 记录失败也不拦着花的呈现 */ }
+  $('flowerBefore').classList.add('hidden');
+  $('flowerAfter').classList.remove('hidden');
+  localStorage.setItem('ziwei_gifted', '1');
+}
+/* 从 PayPal 回来：?flower=returned */
+(function checkFlowerReturn() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('flower') === 'returned') {
+    const token = q.get('gift') || localStorage.getItem('ziwei_gift_token') || 'returned';
+    history.replaceState(null, '', location.pathname);
+    const card = $('flowerCard');
+    if (card) {
+      card.scrollIntoView();
+      recordGift(token, 'paypal-return');
+    }
+  }
+})();
+
+/* ---------- 访问统计 beacon（与 /test 页同一套） ---------- */
+(function () {
+  try {
+    fetch(API_BASE + '/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: location.pathname, ref: document.referrer,
+        lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        vw: window.innerWidth, vh: window.innerHeight,
+        touch: 'ontouchstart' in window, webdriver: !!navigator.webdriver,
+      }),
+    }).catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
