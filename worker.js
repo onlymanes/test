@@ -174,6 +174,7 @@ async function handleChat(req) {
 
 /* ---- 紫微星娱乐测试（2026-11-14 V1）----
  * POST /api/ziwei  公开接口（不登录），每人每天限 1 次（IP 哈希 + 日期，记 KV）。
+ * 临时白名单（密钥 ALLOWLIST_IP，里贾纳日期至 2026-11-14）在有效期内跳过限额，过期自动失效。
  * 机制：两颗候选紫微星，服务端 50% 随机定其一；星的命盘为引擎预生成脱敏常量。
  * 星的具体出生数据在 Worker 密钥 ZIWEI_STARS_JSON 中，不在仓库文件里。
  * 不透露：接口响应与页面均不得含星的时间、日期、真太阳时、时辰、地点字段；
@@ -192,6 +193,23 @@ function getZiweiStars() {
     if (Array.isArray(arr) && arr.length === 2) return arr;
   } catch (e) { /* fall through */ }
   return null;
+}
+/* 临时白名单（Helen 临时测试用）：密钥 ALLOWLIST_IP 的值形如 {"ip": "...", "until": "YYYY-MM-DD"}，
+   until 为里贾纳日期。请求 IP 与密钥里的 IP 一致、且当前里贾纳日期 <= until 时，
+   跳过每日 1 次限制；其余 IP 与过期后一律按原限额执行。IP 只存在密钥里，不写代码、不进日志。 */
+function reginaDateStr(now) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Regina', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now || new Date());
+}
+function isZiweiAllowlisted(ip, allowlistJson, now) {
+  try {
+    if (!allowlistJson || !ip || ip === 'unknown') return false;
+    const al = JSON.parse(allowlistJson);
+    if (!al || typeof al.ip !== 'string' || typeof al.until !== 'string') return false;
+    if (ip !== al.ip) return false;
+    return reginaDateStr(now) <= al.until;
+  } catch (e) { return false; }
 }
 /* 两颗候选紫微星的命盘（Renhuai123/ziwei-doushu 引擎预生成，已脱敏：
    不含任何日期/时间/地点信息，label 统为“紫微星”；按掷选序号取用。
@@ -308,10 +326,13 @@ async function handleZiwei(req) {
   const ip = req.headers.get('CF-Connecting-IP') || 'unknown';
   const day = new Date().toISOString().slice(0, 10);
   const key = 'ziwei:day:' + day + ':' + await hashIP(ip);
-  if (await MEMORY.get(key)) {
-    return json({ error: 'daily_limit', message: '今天已经测过一次啦，明天再来。' }, 429, req);
+  const allowlisted = isZiweiAllowlisted(ip, (typeof ALLOWLIST_IP !== 'undefined') ? ALLOWLIST_IP : '');
+  if (!allowlisted) {
+    if (await MEMORY.get(key)) {
+      return json({ error: 'daily_limit', message: '今天已经测过一次啦，明天再来。' }, 429, req);
+    }
+    await MEMORY.put(key, '1', { expirationTtl: 48 * 3600 });
   }
-  await MEMORY.put(key, '1', { expirationTtl: 48 * 3600 });
 
   const mh = meihua(t);
   const pick = crypto.getRandomValues(new Uint8Array(1))[0] % stars.length;
@@ -365,7 +386,7 @@ async function handleZiwei(req) {
         throw new Error('story_guardrail_fail');
       }
     } catch (e2) {
-      await MEMORY.delete(key);
+      if (!allowlisted) { await MEMORY.delete(key); }
       return json({ error: 'model_failed', message: '故事没写出来，请稍后再试一次（今天的次数还在）。', detail: firstError + ' | ' + String((e2 && e2.message) || e2).slice(0, 120) }, 502, req);
     }
   }
