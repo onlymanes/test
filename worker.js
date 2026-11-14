@@ -318,7 +318,7 @@ async function handleZiwei(req) {
     '你的命盘（iztro 排盘，仅作故事素材）：' + (userChart ? JSON.stringify(userChart) : '（排盘库未加载，未提供命盘）'),
     '紫微星的命盘（iztro 排盘，仅作故事素材）：' + (starChart ? JSON.stringify(starChart) : '（排盘库未加载，未提供命盘）'),
     '梅花易数起卦（提交时刻 ' + t.y + '-' + t.mo + '-' + t.d + ' ' + t.h + ':' + String(t.mi).padStart(2, '0') + ':' + String(t.s).padStart(2, '0') + '）：上卦' + mh.upper.name + mh.upper.symbol + '，下卦' + mh.lower.name + mh.lower.symbol + '，动爻第' + mh.movingLine + '爻；本卦第' + mh.hexagram.num + '卦' + mh.hexagram.name + '，变卦第' + mh.changedHexagram.num + '卦' + mh.changedHexagram.name + '。',
-    '你此刻写的一句话（原样引用，不可改写）：“' + sentence + '”',
+    '你此刻写的一句话（原样引用，不可改写）' + (sentence ? '：“' + sentence + '”' : '：这次没有写一句话。'),
     '你想象的前世出生地：' + (imagination || '（未填）'),
     '你的出生地：' + (birthplace || '（未填）'),
     '请按三章写：我是谁 / 我从哪来 / 我要去哪。',
