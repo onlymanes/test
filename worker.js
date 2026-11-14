@@ -174,14 +174,19 @@ async function handleChat(req) {
 
 /* ---- 紫微星娱乐测试（2026-11-14 V1）----
  * POST /api/ziwei  公开接口（不登录），每人每天限 1 次（IP 哈希 + 日期，记 KV）。
- * 机制：两颗候选紫微星（两颗候选），服务端 50% 随机定其一；
- * 提交时刻（精确到秒，取用户本地时钟）+ 梅花易数起卦；命盘由前端 iztro 2.6.1 排好随请求带来。
- * 故事由 Gemini 2.0 Flash 写：只讲故事，不预测、不给人生建议；输出后做断言词复查。
+ * 机制：两颗候选紫微星，服务端 50% 随机定其一；星的命盘为引擎预生成脱敏常量。
+ * 不透露：接口响应与页面均不得含星的时间、日期、真太阳时、时辰、地点字段；
+ * 提交时刻（精确到秒，取用户本地时钟）+ 梅花易数起卦；命盘由前端 Renhuai123/ziwei-doushu 引擎排好随请求带来。
+ * 故事由 Gemini 2.5 Flash 写（2.0 Flash 作备用）：只讲故事，不预测、不给人生建议；输出后做断言词复查。
  * POST /api/ziwei-gift  送花自愿确认记录（V1：只记“用户说已送花”，不核对到账）。
  */
 const ZIWEI_MODEL = 'gemini-2.5-flash';
 const ZIWEI_MODEL_FALLBACK = 'gemini-2.0-flash';
 const ZIWEI_STARS = []; // 出生数据已移至 Worker 密钥 ZIWEI_STARS_JSON，不在仓库中
+/* 两颗候选紫微星的命盘（Renhuai123/ziwei-doushu 引擎预生成，已脱敏：
+   不含任何日期/时间/地点信息，label 统为“紫微星”。原始时间只存在于上方
+   ZIWEI_STARS 常量（后端机制），永不随接口返回、永不在页面展示。 */
+const ZIWEI_STAR_CHARTS = {"a": {"label": "紫微星", "soul": "禄存", "body": "火星", "fiveElements": "木三局", "lifePalace": {"name": "命宫", "stem": "庚", "branch": "寅", "major": [], "minor": [], "adjective": ["封诰", "旬空", "蜚廉", "阴煞"]}, "ziweiPalace": "兄弟", "spousePalace": {"name": "夫妻", "stem": "庚", "branch": "子", "major": ["天机(庙)化权"], "minor": ["天厨"], "adjective": ["天福", "天哭", "天虚"]}, "careerPalace": {"name": "官禄", "stem": "甲", "branch": "午", "major": ["巨门(旺)"], "minor": [], "adjective": ["擎羊", "台辅"]}, "palaces": ["命宫:空宫", "父母:天府", "福德:太阴", "田宅:廉贞、贪狼", "官禄:巨门", "仆役:天相", "迁移:天同、天梁", "疾厄:武曲、七杀", "财帛:太阳", "子女:空宫", "夫妻:天机", "兄弟:紫微、破军"]}, "b": {"label": "紫微星", "soul": "巨门", "body": "火星", "fiveElements": "土五局", "lifePalace": {"name": "命宫", "stem": "辛", "branch": "丑", "major": [], "minor": ["天姚", "龙德"], "adjective": ["大耗"]}, "ziweiPalace": "夫妻", "spousePalace": {"name": "夫妻", "stem": "己", "branch": "亥", "major": ["紫微(旺)", "七杀(平)"], "minor": ["劫煞"], "adjective": ["天魁", "月德"]}, "careerPalace": {"name": "官禄", "stem": "癸", "branch": "巳", "major": ["天府(得)"], "minor": ["破碎"], "adjective": ["文曲", "禄存", "三台", "天贵", "天巫", "天官", "副截"]}, "palaces": ["父母:空宫", "福德:廉贞、破军", "田宅:空宫", "官禄:天府", "仆役:天同、太阴", "迁移:武曲、贪狼", "疾厄:太阳、巨门", "财帛:天相", "子女:天机、天梁", "夫妻:紫微、七杀", "兄弟:空宫", "命宫:空宫"]}};
 const ZIWEI_MODES = {
   future: '自己的未来与紫微星的缘分 + 自己的运势',
   child: '一位已出生、有名字的子女的紫微缘和运势',
@@ -297,9 +302,8 @@ async function handleZiwei(req) {
   const mh = meihua(t);
   const pick = crypto.getRandomValues(new Uint8Array(1))[0] % 2;
   const star = ZIWEI_STARS[pick];
-  const other = ZIWEI_STARS[1 - pick];
   const userChart = body.userChart || null;
-  const starChart = (body.starCharts && body.starCharts[star.id]) || null;
+  const starChart = ZIWEI_STAR_CHARTS[star.id] || null;
   const sentence = String(body.sentence || '').slice(0, 100);
   const imagination = String(body.imagination || '').slice(0, 200);
   const birthplace = String(body.birthplace || '').slice(0, 100);
@@ -314,9 +318,9 @@ async function handleZiwei(req) {
 
   const userText = [
     '模式：' + ZIWEI_MODES[mode] + '。' + modeNote,
-    '今晚掷到的紫微星：' + star.place + '的那颗（出生 ' + star.clock + ' ' + star.tzLabel + '；按真太阳时约 ' + star.trueSolar + '，' + star.hourBranch + '）。另一颗候选是' + other.place + '的那颗（出生 ' + other.clock + ' ' + other.tzLabel + '；按真太阳时约 ' + other.trueSolar + '，' + other.hourBranch + '）。',
-    '你的命盘（iztro 排盘，仅作故事素材）：' + (userChart ? JSON.stringify(userChart) : '（排盘库未加载，未提供命盘）'),
-    '紫微星的命盘（iztro 排盘，仅作故事素材）：' + (starChart ? JSON.stringify(starChart) : '（排盘库未加载，未提供命盘）'),
+    '今晚掷到的紫微星：两颗候选紫微星经 50% 随机掷选，定下了为你讲故事的这一颗。',
+    '你的命盘（Renhuai123 排盘引擎，仅作故事素材）：' + (userChart ? JSON.stringify(userChart) : '（排盘引擎未加载，未提供命盘）'),
+    '紫微星的命盘（Renhuai123 排盘引擎，仅作故事素材）：' + (starChart ? JSON.stringify(starChart) : '（排盘引擎未加载，未提供命盘）'),
     '梅花易数起卦（提交时刻 ' + t.y + '-' + t.mo + '-' + t.d + ' ' + t.h + ':' + String(t.mi).padStart(2, '0') + ':' + String(t.s).padStart(2, '0') + '）：上卦' + mh.upper.name + mh.upper.symbol + '，下卦' + mh.lower.name + mh.lower.symbol + '，动爻第' + mh.movingLine + '爻；本卦第' + mh.hexagram.num + '卦' + mh.hexagram.name + '，变卦第' + mh.changedHexagram.num + '卦' + mh.changedHexagram.name + '。',
     '你此刻写的一句话（原样引用，不可改写）' + (sentence ? '：“' + sentence + '”' : '：这次没有写一句话。'),
     '你想象的前世出生地：' + (imagination || '（未填）'),
@@ -355,15 +359,15 @@ async function handleZiwei(req) {
 
   return json({
     ok: true,
-    star: star,
-    otherStar: other,
     meihua: mh,
     story: story,
     audit: {
-      chart: 'iztro 2.6.1 开源排盘库（与排 Helen 命盘所用的同一套；中州派取象）',
+      chart: 'Renhuai123/ziwei-doushu 开源排盘引擎（倪海厦《天纪》体系，MIT），与排 Helen 命盘所用的同一套',
       chartUsed: !!userChart,
       starChartUsed: !!starChart,
       timeKnown: !!body.timeKnown,
+      lateZishi: !!body.lateZishi,
+      leapNote: String(body.leapNote || '').slice(0, 100),
       genderNote: body.genderNote || '',
       random: '两颗候选紫微星，服务端 50% 随机掷选',
       userWords: '你写的一句话已原样引用，未改写',
